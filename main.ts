@@ -72,14 +72,14 @@ namespace makerobo {
         T5B0 = 1800
     }
     
-     export enum enObstacle {
+    export enum enObstacle {
         //% blockId="Obstacle" block="Obstacle"
         Obstacle = 0,
         //% blockId="NoObstacle" block="No Obstacle"
         NoObstacle = 1
     }
 
-     export enum enflame {
+    export enum enflame {
         //% blockId="Flame" block="Flame Detected"
         Flame = 0,
         //% blockId="NoFlame" block="No Flame"
@@ -96,21 +96,12 @@ namespace makerobo {
     }
 
     let initialized = false
-    let initializedMatrix = false
     let neoStrip: neopixel.Strip;
-    let matBuf = pins.createBuffer(17);
-    let distanceBuf = 0;
 
     function i2cwrite(addr: number, reg: number, value: number) {
         let buf = pins.createBuffer(2)
         buf[0] = reg
         buf[1] = value
-        pins.i2cWriteBuffer(addr, buf)
-    }
-
-    function i2ccmd(addr: number, value: number) {
-        let buf = pins.createBuffer(1)
-        buf[0] = value
         pins.i2cWriteBuffer(addr, buf)
     }
 
@@ -135,7 +126,7 @@ namespace makerobo {
         prescaleval /= 4096;
         prescaleval /= freq;
         prescaleval -= 1;
-        let prescale = prescaleval; //Math.Floor(prescaleval + 0.5);
+        let prescale = Math.floor(prescaleval + 0.5);
         let oldmode = i2cread(PCA9685_ADDRESS, MODE1);
         let newmode = (oldmode & 0x7F) | 0x10; // sleep
         i2cwrite(PCA9685_ADDRESS, MODE1, newmode); // go to sleep
@@ -148,9 +139,6 @@ namespace makerobo {
     function setPwm(channel: number, on: number, off: number): void {
         if (channel < 0 || channel > 15)
             return;
-        //serial.writeValue("ch", channel)
-        //serial.writeValue("on", on)
-        //serial.writeValue("off", off)
         
         let buf = pins.createBuffer(5);
         buf[0] = LED0_ON_L + 4 * channel;
@@ -169,7 +157,7 @@ namespace makerobo {
         if (!initialized) {
             initPCA9685()
         }
-        if (value == true) {
+        if (value === true) {
             setPwm(index+7, 0, 4095);
         }
         else { 
@@ -178,7 +166,7 @@ namespace makerobo {
     }
 
     function setStepper(index: number, dir: boolean): void {
-        if (index == 1) {
+        if (index === 1) {
             if (dir) {
                 setPwm(0, STP_CHA_L, STP_CHA_H);
                 setPwm(2, STP_CHB_L, STP_CHB_H);
@@ -293,9 +281,17 @@ namespace makerobo {
 
     /**
      * Execute two motors at the same time
-     * @param motor1 First Motor; eg: M1A, M1B
+     * @param motor1 First Motor; eg: Left, Right
      * @param speed1 [-255-255] speed of motor; eg: 150, -150
-     * @param motor2 Second Motor; eg: M2A, M2B
+     * @param motor2 Second Motor; eg: Left, Right
      * @param speed2 [-255-255] speed of motor; eg: 150, -150
     */
-    //% blockId=robotbit_motor_dual block="Motor|%motor1|Speed %speed1|
+    //% blockId=robotbit_motor_dual block="Motor|%motor1|Speed %speed1|%motor2|Speed %speed2"
+    //% weight=84
+    //% speed1.min=-255 speed1.max=255
+    //% speed2.min=-255 speed2.max=255
+    export function MotorRunDual(motor1: Motors, speed1: number, motor2: Motors, speed2: number): void {
+        MotorRun(motor1, speed1);
+        MotorRun(motor2, speed2);
+    }
+}
